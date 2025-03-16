@@ -5,18 +5,23 @@ import Typo from '@/components/Typo'
 import { colors, spacingX, spacingY } from '@/constants/theme'
 import { verticalScale } from '@/utils/styling'
 import Button from '@/components/Button'
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated'
+import { useRouter } from 'expo-router'
 
 const Welcome = () => {
+  const router = useRouter();
+
   return (
     <ScreenWrapper>
      <View style={styles.container}>
         {/* loggin component */}
         <View>
-            <TouchableOpacity style={styles.loginButton}>
+            <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={styles.loginButton}>
                 <Typo fontWeight={"500"}>Sign In</Typo>
             </TouchableOpacity>
 
-            <Image 
+            <Animated.Image
+            entering={FadeIn.duration(2000)} 
               source={require('../../assets/images/welcome.png')}
               style={styles.welcomeImage}
               resizeMode='contain'
@@ -24,25 +29,23 @@ const Welcome = () => {
         </View>  
         {/* footer */}
         <View style={styles.footer}>
-           <View style={{alignItems: "center"}}>
+           <Animated.View entering={FadeInDown.duration(1000).springify().damping(12)} style={{alignItems: "center"}}>
               <Typo size={30} fontWeight={"800"}>Always take control</Typo>
-            </View>
 
-            <View style={{alignItems: "center"}}>
               <Typo size={30} fontWeight={"800"}>of your finances</Typo>
-            </View>
+            </Animated.View>
 
-            <View style={{alignItems:"center", gap: 2}}>
+            <Animated.View entering={FadeInDown.duration(1000).delay(100).springify().damping(12)} style={{alignItems:"center", gap: 2}}>
               <Typo size={17} color={colors.textLight}>Finances will be arranged to set a better</Typo>
               <Typo size={17} >lifestyle in future</Typo>
-            </View>
+            </Animated.View>
 
-            <View style={styles.buttonContainer}>
+            <Animated.View entering={FadeInDown.duration(1000).delay(200).springify().damping(12)} style={styles.buttonContainer}>
               {/* button */}
-              <Button>
-                <Typo>Get Started</Typo>
+              <Button onPress={() => router.push('/(auth)/register')}>
+                <Typo size={22} color={colors.neutral900} fontWeight={"600"}>Get Started</Typo>
               </Button>
-            </View>
+            </Animated.View>
 
           </View>
         </View>
