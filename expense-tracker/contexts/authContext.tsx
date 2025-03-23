@@ -1,14 +1,37 @@
 import { auth, firestore } from "@/config/firebase";
 import { AuthContextType, UserType } from "@/types";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { useRouter } from "expo-router";
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{children: React.ReactNode}> = ({children}) => {
     const [user,setUser] = useState<UserType | null>(null);
+    const router = useRouter();
+
+    useEffect(()=>{
+        const unsub = onAuthStateChanged(auth, (firebaseUser)=>{
+            console.log("userNerw", firebaseUser);
+            
+           if(firebaseUser) {
+            setUser({
+                uid: firebaseUser?.uid,
+                email: firebaseUser?.email,
+                name: firebaseUser?.displayName
+            })
+            updateUserData(firebaseUser.uid)
+            router.replace("/(tabs)")
+           } else {
+            // no user
+            setUser(null)
+            router.replace("/(auth)/welcome")
+           }
+        })
+        return () => unsub()
+    }, [])
 
     const login = async (email: string, password: string)=>{
         try{
@@ -16,6 +39,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({children}) 
             return {success: true}
         } catch(error:any) {
             let msg = error.message;
+
+            console.log("error login", msg);
+
+            if(msg.includes('(auth/invalid-credential)')) msg = "Wrong credential"
+            if(msg.includes('(auth/invalid-email)')) msg = "Wrong Email"
+
             return {success: false, msg}
         }
     }
@@ -31,6 +60,12 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({children}) 
             return {success: true}
         } catch(error:any) {
             let msg = error.message;
+
+            console.log("error login", msg);
+
+            if(msg.includes('(auth/email-already-in-use)')) msg = "This email is already in use"
+            if(msg.includes('(auth/invalid-email)')) msg = "Wrong Email"
+
             return {success: false, msg}
         }
     }
