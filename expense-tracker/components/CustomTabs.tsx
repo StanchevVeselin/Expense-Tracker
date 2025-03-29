@@ -2,12 +2,42 @@ import { View, Platform, TouchableOpacity, StyleSheet } from 'react-native';
 import { useLinkBuilder, useTheme } from '@react-navigation/native';
 import { Text, PlatformPressable } from '@react-navigation/elements';
 import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {colors} from "./../constants/theme"
+import {colors, spacingY} from "./../constants/theme"
 import { verticalScale } from '@/utils/styling';
+import * as Icons from "phosphor-react-native"
 
 export default function CustomTabs({ state, descriptors, navigation }: BottomTabBarProps) {
-//   const { colors } = useTheme();
-//   const { buildHref } = useLinkBuilder();
+
+  const tabarIcons: any = {
+    index:(isFocused: boolean) => (
+      <Icons.House
+        size={verticalScale(30)}
+        weight={isFocused? "fill": "regular"}
+        color={isFocused? colors.primary: colors.neutral400}
+        />
+      ),
+    statistics:(isFocused: boolean) => (
+        <Icons.ChartBar
+          size={verticalScale(30)}
+          weight={isFocused? "fill": "regular"}
+          color={isFocused? colors.primary: colors.neutral400}
+          />
+        ),
+    wallet:(isFocused: boolean) => (
+          <Icons.Wallet
+            size={verticalScale(30)}
+            weight={isFocused? "fill": "regular"}
+            color={isFocused? colors.primary: colors.neutral400}
+            />
+          ),
+    profile:(isFocused: boolean) => (
+            <Icons.User
+              size={verticalScale(30)}
+              weight={isFocused? "fill": "regular"}
+              color={isFocused? colors.primary: colors.neutral400}
+              />
+            ),
+  }
 
   return (
     <View style={styles.tapbar}>
@@ -44,16 +74,17 @@ export default function CustomTabs({ state, descriptors, navigation }: BottomTab
         return (
           <TouchableOpacity
             // href={buildHref(route.name, route.params)}
+            key={route.name}
             accessibilityState={isFocused ? { selected: true } : {}}
             accessibilityLabel={options.tabBarAccessibilityLabel}
             testID={options.tabBarButtonTestID}
             onPress={onPress}
             onLongPress={onLongPress}
-            style={{ flex: 1 }}
+            style={styles.tapbarItem}
           >
-            <Text style={{ color: isFocused ? colors.primary : colors.neutral800 }}>
-              {label}
-            </Text>
+            {
+              tabarIcons[route.name] && tabarIcons[route.name](isFocused)
+            }
           </TouchableOpacity>
         );
       })}
@@ -69,5 +100,12 @@ const styles = StyleSheet.create({
         backgroundColor: colors.neutral800,
         justifyContent: "space-around",
         alignItems: "center",
+        borderTopColor: colors.neutral700,
+        borderTopWidth: 1
+    },
+    tapbarItem: {
+      marginBottom: Platform.OS == "ios" ? spacingY._10: spacingY._5,
+      justifyContent: "center",
+      alignItems: "center",
     }
 })
