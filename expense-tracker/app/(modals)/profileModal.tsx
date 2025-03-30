@@ -1,5 +1,5 @@
-import { StyleSheet, TouchableOpacity, View } from 'react-native'
-import React from 'react'
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { colors, spacingX, spacingY } from '@/constants/theme'
 import { scale, verticalScale } from '@/utils/styling'
 import ScreenWrapper from '@/components/ScreenWrapper'
@@ -11,19 +11,58 @@ import { getProfileImage } from '@/services/imageServise'
 import * as Icons from "phosphor-react-native" 
 import Animated from 'react-native-reanimated'
 import Typo from '@/components/Typo'
+import Input from '@/components/Input'
+import { UserDataType } from '@/types'
+import Button from '@/components/Button'
+import { useAuth } from '@/contexts/authContext'
+import { updateUser } from '@/services/userService'
+import { useRouter } from 'expo-router'
 
 const ProfileModal = () => {
-  return (
-    <ModalWrapper>
+    const [userData, setUserData] = useState<UserDataType>({
+        name: "",
+        image: null
+    });
+    const [loading, setLoading] = useState(false);
+    const {user, updateUserData} = useAuth();
+    const router = useRouter();
+    useEffect(() => {
+        setUserData({
+            name: user?.name || "",
+            image: user?.image || null
+        })
+    },[user])
+
+    const onSubmit = async () => {
+        let {name,image} = userData;
+        if(!name.trim()) {
+            Alert.alert("User", "Please fill all the fields")
+            return;
+        }
+        
+        setLoading(true);
+        const res = await updateUser(user?.uid as string , userData);
+        setLoading(false)
+        if(res.success) {
+            // user is updated
+            updateUserData(user?.uid as string);
+            router.back();
+        } else {
+            Alert.alert("User", res.msg)
+        }
+    };
+
+    return (
+        <ModalWrapper>
       <View style={styles.container}>
         <Header title='Update Profile' leftIcon={<BackButton />} style={{marginBottom: spacingY._10}} />
 
       {/* form */}
-      <Animated.ScrollView contentContainerStyle={styles.form}>
+      <ScrollView contentContainerStyle={styles.form}>
         <View style={styles.avatarContainer} >
             <Image 
                 style={styles.avatar}
-                source={getProfileImage(null)}
+                source={getProfileImage(userData.image)}
                 contentFit='cover'
                 transition={100}
             />
@@ -33,8 +72,25 @@ const ProfileModal = () => {
         </View>
         <View style={styles.inputContainer}>
             <Typo color={colors.neutral200}>Name</Typo>
+            < Input 
+                placeholder='Name'
+                value={userData.name}
+                onChangeText={(value)=> setUserData({...userData, name: value})}
+            />
         </View>
-      </Animated.ScrollView>
+      </ScrollView>
+    </View>
+
+    <View style={styles.footer} >
+        <Button 
+            onPress={onSubmit}
+            style={{flex: 1}}
+            loading={loading}
+        >
+            <Typo color={colors.black} fontWeight={"700"}>
+                Update
+            </Typo>
+        </Button>
     </View>
     </ModalWrapper>
   )
