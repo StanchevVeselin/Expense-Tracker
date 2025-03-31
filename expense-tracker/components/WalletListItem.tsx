@@ -7,6 +7,7 @@ import { colors, radius, spacingX } from '@/constants/theme'
 import { verticalScale } from '@/utils/styling'
 import { Image } from 'expo-image'
 import * as Icons from "phosphor-react-native"
+import Animated, { FadeInDown } from 'react-native-reanimated'
 
 const WalletListItem = ({
     item,
@@ -17,9 +18,21 @@ const WalletListItem = ({
     index: number,
     router: Router
 }) => {
+
+    const openWallet = () => {
+        router.push({
+            pathname: "/(modals)/walletModal",
+            params : {
+                id: item?.id,
+                name: item?.name,
+                image: item?.image
+            }
+        })
+    }
+
   return (
-    <View>
-      <TouchableOpacity style={styles.container}>
+    <Animated.View entering={FadeInDown.delay(index*50).springify().damping(13)}>
+      <TouchableOpacity style={styles.container} onPress={openWallet}>
         <View style={styles.imageContainer}>
             <Image 
                 style={{flex:1}}
@@ -40,7 +53,7 @@ const WalletListItem = ({
             color={colors.white}
         />
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   )
 }
 

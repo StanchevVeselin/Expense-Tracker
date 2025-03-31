@@ -14,15 +14,19 @@ import Loading from '@/components/Loading'
 import WalletListItem from '@/components/WalletListItem'
 
 const Wallet = () => {
-  const getTotalBalance = () => {
-    return 0;
-  }
   const {user} = useAuth();
   const router = useRouter();
   const {data: wallets, loading, error} = useFetchData<WalletType>("wallets", [
     where("uid","==", user?.uid),
     orderBy("created","desc")
   ]);
+
+  const getTotalBalance = () => 
+    wallets.reduce((total,item) => {
+      total = total + (item.amount || 0)
+      return total;
+    }, 0)
+  
   console.log("wallets", wallets.length);
   
   return (
