@@ -57,6 +57,24 @@ export const expenseCategories: ExpenseCategoriesType = {
         icon: Icons.PiggyBank,
         bgColor: "#065F46"
     },
+    dining: {
+        label: "Dining",
+        value: "dining",
+        icon: Icons.ForkKnife,
+        bgColor: "#be185d"
+    },
+    health: {
+        label: "Health",
+        value: "health",
+        icon: Icons.Heart,
+        bgColor: "#e11d48"
+    },
+    insurance: {
+        label: "Insurance",
+        value: "insurance",
+        icon: Icons.ShieldCheck,
+        bgColor: "#404040"
+    }
 
 }
 

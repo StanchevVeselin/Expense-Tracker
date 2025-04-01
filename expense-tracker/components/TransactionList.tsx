@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React from 'react'
 import { TransactionItemProps, TransactionListType } from '@/types'
 import { verticalScale } from '@/utils/styling'
@@ -6,6 +6,7 @@ import { colors, radius, spacingX, spacingY } from '@/constants/theme'
 import Typo from './Typo'
 import {FlashList} from "@shopify/flash-list"
 import Loading from './Loading'
+import { expenseCategories } from '@/constants/data'
 
 const TransactionList = ({
     data,
@@ -55,8 +56,24 @@ const TransactionList = ({
 const TransactionItem = ({
     item, index, handleClick
 }: TransactionItemProps) => {
+
+    let category = expenseCategories["utilities"]
+    const IconComponent = category.icon
+
     return <View>
-        <Typo>Transacion Item</Typo>
+        <TouchableOpacity style={styles.row}> 
+            <View style={[styles.icon, {backgroundColor: category.bgColor}]}>
+                {
+                    IconComponent && (
+                        <IconComponent
+                            size={verticalScale(25)}
+                            weight='fill'
+                            color={colors.white}
+                        />
+                    )
+                }
+            </View>
+        </TouchableOpacity>
     </View>
 }
 
