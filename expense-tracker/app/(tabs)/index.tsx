@@ -12,6 +12,7 @@ import * as Icons from "phosphor-react-native"
 import HomeCard from '@/components/HomeCard'
 import TransactionList from '@/components/TransactionList'
 
+
 const Home = () => {
  const {user} = useAuth();
 
@@ -42,7 +43,7 @@ const Home = () => {
                 <HomeCard/>
              </View>
 
-              <TransactionList />
+              <TransactionList data={[]} loading={false} emptyListMessage='Not transactions yet' title="Recent Transactions"/>
 
         </ScrollView>
 
