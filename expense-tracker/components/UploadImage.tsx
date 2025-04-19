@@ -24,7 +24,7 @@ const UploadImage = ({
             allowsEditing: true,
             aspect: [4,3],
             quality: 0.5
-        });
+        })
         
         console.log(result);
 

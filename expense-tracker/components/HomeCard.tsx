@@ -23,7 +23,7 @@ const HomeCard = () => {
                     weight="fill"
                 />
             </View>
-            <Typo color={colors.black} size={30} fontWeight={"bold"}>$555</Typo>
+            <Typo color={colors.black} size={30} fontWeight={"bold"}>$5200</Typo>
         </View>
 
         {/* expense and income */}
