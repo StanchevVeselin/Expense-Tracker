@@ -312,8 +312,19 @@ const TransactionModal = () => {
       </View>
     )
   )}
-  
           </View>
+          {/* amount */}
+          <View style={styles.inputContainer}>
+            <Typo color={colors.neutral200}>Amount</Typo>
+            < Input 
+                // placeholder='Salary'
+                keyboardType="numeric"
+                value={transaction.amount?.toString()}
+                onChangeText={(value)=> setTransaction({...transaction, 
+                    amount: Number(value.replace(/[^0-9]/g, ""))
+                })}
+            />
+        </View>
 
           <View style={styles.inputContainer}>
             <Typo color={colors.neutral200}>Wallet Icon</Typo>
