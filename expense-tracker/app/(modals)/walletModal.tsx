@@ -54,6 +54,13 @@ const WalletModal = () => {
           uid: user?.uid
         };
 
+        if (!user || !user.uid) {
+            Alert.alert("Auth", "User is not authenticated.");
+            console.log("user:",user);
+            
+            return;
+          }
+
         // include wallet id if updated
         if(oldWallet?.id) data.id = oldWallet?.id;
 
@@ -154,7 +161,7 @@ const WalletModal = () => {
         >
             <Typo color={colors.black} fontWeight={"700"}>
                 {
-                    oldWallet?.id ? "Update Wallet": 'New Wallet'
+                    oldWallet?.id ? "Update Wallet": 'Add Wallet'
                 }
             </Typo>
         </Button>
