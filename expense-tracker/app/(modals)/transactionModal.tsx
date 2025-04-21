@@ -104,10 +104,22 @@ const TransactionModal = () => {
     const { type, image, description, category, walletId, amount, date } =
       transaction;
 
-   if(!walletId || !date || !amount || (type == 'expense' && !category)) {
-    Alert.alert("Transactions", "Please fill all the fields");
-    return;
-   }
+    if (!walletId || !date || !amount || (type == "expense" && !category)) {
+      Alert.alert("Transactions", "Please fill all the fields");
+      return;
+    }
+
+    let transactionData: TransactionType = {
+      type,
+      amount,
+      description,
+      category,
+      date,
+      walletId,
+      image,
+      uid: user?.uid,
+    };
+    console.log(transactionData);
 
     // include transaction id for updating
     setLoading(true);
