@@ -15,6 +15,13 @@ export const createOrUpdateTransaction = async (
 
         if (id) {
             //    update existing transaction
+            const oldTransactionSnapshot = await getDoc(doc(firestore, "transactions", id));
+            const oldTransaction =  oldTransactionSnapshot.data() as TransactionType;
+            const shouldRevertOriginal = oldTransaction.type != type || oldTransaction.amount != amount || oldTransaction.walletId != walletId;
+            if(shouldRevertOriginal) {
+                let res = await revertAndUpdateWallets(oldTransaction,Number(amount), type, walletId);
+                if(!res.success) return res;
+            }
         } else {
             //    update wallet for new transaction
             //    update wallet - function
@@ -88,3 +95,44 @@ const updateWalletForNewTransaction = async (
     }
 
 }
+
+const revertAndUpdateWallets = async (
+    oldTransaction: TransactionType
+) => {
+    try {
+        const walletRef = doc(firestore, "wallets", walletId);
+        const walletSnapshot = await getDoc(walletRef);
+
+        if (!walletSnapshot.exists()) {
+            console.log("Transaction Service: Error updating wallet for the new transaction");
+            return { success: false, msg: "Wallet not found" };
+        }
+
+        const walletData = walletSnapshot.data() as WalletType;
+
+        if (type == "expense" && walletData.amount! - amount < 0) {
+            return { success: false, msg: "Selected wallet don't have enough balance" };
+        }
+
+        const updateType = type == "income" ? "totalIncome" : "totalExpenses";
+
+        const updatedWalletAmount = type == "income"
+            ? Number(walletData.amount) + amount
+            : Number(walletData.amount) - amount;
+
+        const updatedTotals = type == "income"
+            ? Number(walletData.totalIncome) + amount
+            : Number(walletData.totalExpenses) + amount;
+
+        await updateDoc(walletRef, {
+            amount: updatedWalletAmount,
+            [updateType]: updatedTotals
+        })
+        return { success: true };
+    } catch (error: any) {
+        console.log("Transaction Service: Error updating wallet for the new transaction", error);
+        return { success: false, msg: error.message };
+    }
+
+}
+
