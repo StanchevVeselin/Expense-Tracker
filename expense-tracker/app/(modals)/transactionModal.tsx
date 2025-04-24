@@ -135,7 +135,7 @@ const TransactionModal = () => {
       category,
       date,
       walletId,
-      image,
+      image: image? image : null,
       uid: user?.uid,
     };
     console.log(transactionData);
@@ -157,7 +157,7 @@ const TransactionModal = () => {
   const onDelete = async () => {
     if (!oldTransaction?.id) return;
     setLoading(true);
-    const res = await deleteWallet(oldTransaction?.id);
+    const res = await deleteTransaction(oldTransaction?.id);
     setLoading(false);
 
     if (res.success) {
