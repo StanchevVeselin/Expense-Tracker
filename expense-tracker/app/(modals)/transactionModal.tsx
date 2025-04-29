@@ -36,7 +36,7 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { DateTimePickerAndroid } from "@react-native-community/datetimepicker";
-import { createOrUpdateTransaction } from "@/services/transactionService";
+import { createOrUpdateTransaction, deleteTransaction } from "@/services/transactionService";
 
 const getValidDate = (value: any): Date => {
   if (value instanceof Date) return value;
@@ -157,7 +157,7 @@ const TransactionModal = () => {
   const onDelete = async () => {
     if (!oldTransaction?.id) return;
     setLoading(true);
-    const res = await deleteTransaction(oldTransaction?.id);
+    const res = await deleteTransaction(oldTransaction?.id, oldTransaction.walletId);
     setLoading(false);
 
     if (res.success) {
@@ -170,7 +170,7 @@ const TransactionModal = () => {
   const showDeleteAlert = () => {
     Alert.alert(
       "Confirm",
-      "Are you sure you want to do this? \nThis action will remove all the transactions!",
+      "Are you sure you want to remove this transactions!",
       [
         {
           text: "Cancel",
