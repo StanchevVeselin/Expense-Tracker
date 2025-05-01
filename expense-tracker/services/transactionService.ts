@@ -1,8 +1,11 @@
 import { firestore } from "@/config/firebase";
 import { ResponseType, TransactionType, WalletType } from "@/types"
-import { collection, deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
 import { uploadFileToCloudinary } from "./imageServise";
 import { createORUpdateWallet } from "./walletSerice";
+import { getLast7Days } from "@/utils/common";
+import { scale } from "@/utils/styling";
+import { colors } from "@/constants/theme";
 
 export const createOrUpdateTransaction = async (
     transactionData: Partial<TransactionType>
@@ -17,11 +20,11 @@ export const createOrUpdateTransaction = async (
         if (id) {
             //    update existing transaction
             const oldTransactionSnapshot = await getDoc(doc(firestore, "transactions", id));
-            const oldTransaction =  oldTransactionSnapshot.data() as TransactionType;
+            const oldTransaction = oldTransactionSnapshot.data() as TransactionType;
             const shouldRevertOriginal = oldTransaction.type != type || oldTransaction.amount != amount || oldTransaction.walletId != walletId;
-            if(shouldRevertOriginal) {
-                let res = await revertAndUpdateWallets(oldTransaction,Number(amount), type, walletId);
-                if(!res.success) return res;
+            if (shouldRevertOriginal) {
+                let res = await revertAndUpdateWallets(oldTransaction, Number(amount), type, walletId);
+                if (!res.success) return res;
             }
         } else {
             //    update wallet for new transaction
@@ -43,11 +46,11 @@ export const createOrUpdateTransaction = async (
             transactionData.image = imageUploadRes.data;
         }
 
-        const transactionRef = id? doc(firestore,"transactions",id) : doc(collection(firestore,"transactions"));
+        const transactionRef = id ? doc(firestore, "transactions", id) : doc(collection(firestore, "transactions"));
 
-        await setDoc(transactionRef, transactionData, {merge: true});
+        await setDoc(transactionRef, transactionData, { merge: true });
 
-        return { success: true, data: {...transactionData, id: transactionRef.id}};
+        return { success: true, data: { ...transactionData, id: transactionRef.id } };
     } catch (error: any) {
         console.log("Transaction Service:Creating or updating transactions", error);
 
@@ -105,30 +108,30 @@ const revertAndUpdateWallets = async (
 
 ) => {
     try {
-        const originalWalletSnapshot = await getDoc(doc(firestore, "wallets", oldTransaction.walletId)); 
+        const originalWalletSnapshot = await getDoc(doc(firestore, "wallets", oldTransaction.walletId));
         const originalWallet = originalWalletSnapshot.data() as WalletType;
-        
+
         let newWalletSnapshot = await getDoc(doc(firestore, "wallets", newWalletId));
         let newWallet = newWalletSnapshot.data() as WalletType;
 
-        const revertType = oldTransaction.type == "income"? "totalIncome" : "totalExpenses";
-        const revertIncomeExpenses: number = oldTransaction.type == "income"? -Number(oldTransaction.amount) : Number(oldTransaction.amount)
+        const revertType = oldTransaction.type == "income" ? "totalIncome" : "totalExpenses";
+        const revertIncomeExpenses: number = oldTransaction.type == "income" ? -Number(oldTransaction.amount) : Number(oldTransaction.amount)
         const revertedWalletAmount = Number(originalWallet.amount) + revertIncomeExpenses;
         // wallet amount, after the transaction is removed
 
         const revertIncomeExpensesAmount = Number(originalWallet[revertType]) - Number(oldTransaction.amount);
 
-        if(newTransactionType == "expense") {
+        if (newTransactionType == "expense") {
             // if user tries convert income to expense on the same wallet
             // or if the user tries to increase the expense amount and don't have enough balance
-            if(oldTransaction.walletId == newWalletId && revertedWalletAmount < newTransactionAmount) {
-                return {success: false, msg: "The selected wallet don't have enough balance"}
+            if (oldTransaction.walletId == newWalletId && revertedWalletAmount < newTransactionAmount) {
+                return { success: false, msg: "The selected wallet don't have enough balance" }
             }
 
-             // if user tries to add expense from a new wallet but the wallet don't have enough balance
-             if(newWallet.amount! < newTransactionAmount){
-                return {success: false, msg: "The selected wallet don't have enough balance"}
-             }
+            // if user tries to add expense from a new wallet but the wallet don't have enough balance
+            if (newWallet.amount! < newTransactionAmount) {
+                return { success: false, msg: "The selected wallet don't have enough balance" }
+            }
         }
 
         await createORUpdateWallet({
@@ -168,22 +171,22 @@ export const deleteTransaction = async (
     transactionId: string,
     walletId: string
 ) => {
-    try{
+    try {
         const transactionRef = doc(firestore, "transactions", transactionId);
         const transactionSnapshot = await getDoc(transactionRef);
 
-        if(!transactionSnapshot.exists()) {
+        if (!transactionSnapshot.exists()) {
             return { success: false, msg: "Transaction not found" };
         }
 
-        const transactionData =  transactionSnapshot.data() as TransactionType;
+        const transactionData = transactionSnapshot.data() as TransactionType;
 
         const transactionType = transactionData?.type;
         const transactionAmount = transactionData?.amount;
 
         // fetch wallet to update amount, totalincome andtotalexpnse
-       const walletSnapshot = await getDoc(doc(firestore, "wallets", walletId));
-       const walletData = walletSnapshot.data() as WalletType;
+        const walletSnapshot = await getDoc(doc(firestore, "wallets", walletId));
+        const walletData = walletSnapshot.data() as WalletType;
 
         // check fields to be updated
         const updateType = transactionType == "income" ? "totalIncome" : "totalExpenses";
@@ -191,7 +194,7 @@ export const deleteTransaction = async (
         const newIncomeExpenseAmount = walletData[updateType]! - transactionAmount;
 
         //  if its expense and and wallet amount can go below zero
-        if(transactionType == "expense" && newWalletAmount<0) {
+        if (transactionType == "expense" && newWalletAmount < 0) {
             return { success: false, msg: "You cannot delete this transaction" };
         }
 
@@ -204,7 +207,67 @@ export const deleteTransaction = async (
         await deleteDoc(transactionRef)
 
         return { success: true };
-    }catch (error: any) {
+    } catch (error: any) {
+        console.log("Transaction Service: Error updating wallet for the new transaction", error);
+        return { success: false, msg: error.message };
+    }
+}
+
+export const fetchWeeklyStats = async (
+    uId: string,
+): Promise<ResponseType> => {
+    try {
+        const db = firestore;
+        const today = new Date();
+        const sevenDaysAgo = new Date(today);
+        sevenDaysAgo.setDate(today.getDate() - 7);
+        const transactionQuery = query(
+            collection(db, "transactions"),
+            where("date", ">=", Timestamp.fromDate(sevenDaysAgo)),
+            where("date", "<=", Timestamp.fromDate(today)),
+            orderBy("date", "desc"),
+            where("uid", "==", uId)
+        );
+        const querySnapshot = await getDocs(transactionQuery)
+        const weeklyData = getLast7Days();
+        const transactions: TransactionType[] = [];
+
+        //    mapping each transactions in day
+        querySnapshot.forEach((doc) => {
+            const transaction = doc.data() as TransactionType;
+            transaction.id = doc.id;
+            transactions.push(transaction);
+            const transactionDate = (transaction.date as Timestamp).toDate().toISOString().split("T")[0];
+
+            const dayData = weeklyData.find((day) => day.date == transactionDate);
+
+            if (dayData) {
+                if (transaction.type == "income") {
+                    dayData.income += transaction.amount;
+                } else if (transaction.type == "expense") {
+                    dayData.expense += transaction.amount;
+                }
+            }
+        })
+        // takes each days and creates two entries in array
+        const stats = weeklyData.flatMap((day) => [
+            {
+                value: day.income,
+                label: day.day,
+                spacing: scale(4),
+                labelWidth: scale(30),
+                frontColor: colors.primary
+            },
+            { value: day.expense, frontColor: colors.rose },
+        ])
+        return { 
+            success: true,
+            data: {
+                stats,
+                transactions
+            }
+        };
+    } catch (error: any) {
         console.log("Transaction Service: Error updating wallet for the new transaction", error);
         return { success: false, msg: error.message };
     }
