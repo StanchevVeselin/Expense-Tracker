@@ -3,7 +3,7 @@ import { ResponseType, TransactionType, WalletType } from "@/types"
 import { collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
 import { uploadFileToCloudinary } from "./imageServise";
 import { createORUpdateWallet } from "./walletSerice";
-import { getLast12Months, getLast7Days } from "@/utils/common";
+import { getLast12Months, getLast7Days, getYearsRange } from "@/utils/common";
 import { scale } from "@/utils/styling";
 import { colors } from "@/constants/theme";
 
@@ -334,6 +334,74 @@ export const fetchMonthlyStats = async (
     } catch (error) {
         console.log("Error fetching monthly transaction", error);
         return { success: false, msg: "Failed to fetch monthly transactions" };
+    }
+}
+
+export const fetchYearlyStats = async (
+    uId: string,
+): Promise<ResponseType> => {
+    try {
+        const db = firestore;
+        
+        const transactionQuery = query(
+            collection(db, "transactions"),
+            orderBy("date", "desc"),
+            where("uid", "==", uId)
+        );
+        const querySnapshot = await getDocs(transactionQuery)
+        const transactions: TransactionType[] = [];
+
+        const firstTransaction = querySnapshot.docs.reduce((earliest, doc) => {
+            const transactionDate = doc.data().date.toDate();
+            return transactionDate < earliest ? transactionDate : earliest;
+        }, new Date());
+
+        const firstYear = firstTransaction.getFullYear();
+        const currentYear = new Date().getFullYear()
+
+        const yearlyData = getYearsRange(firstYear, currentYear);
+
+
+        //    mapping each transactions in day
+        querySnapshot.forEach((doc) => {
+            const transaction = doc.data() as TransactionType;
+            transaction.id = doc.id;
+            transactions.push(transaction);
+
+            const transactionYear = (transaction.date as Timestamp).toDate().getFullYear();
+
+            
+            const yearData = yearlyData.find((item: any) => item.year === transactionYear.toString())
+
+            if (yearData) {
+                if (transaction.type === "income") {
+                    yearData.income += transaction.amount;
+                } else if (transaction.type == "expense") {
+                    yearData.expense += transaction.amount;
+                }
+            }
+        })
+        // takes each days and creates two entries in array
+        const stats = yearlyData.flatMap((year: any) => [
+            {
+                value: year.income,
+                label: year.year,
+                spacing: scale(4),
+                labelWidth: scale(35),
+                frontColor: colors.primary
+            },
+            { value: year.expense, frontColor: colors.rose },
+        ])
+        return { 
+            success: true,
+            data: {
+                stats,
+                transactions
+            }
+        };
+    } catch (error) {
+        console.log("Error fetching yearly transaction", error);
+        return { success: false, msg: "Failed to fetch yearly transactions" };
     }
 }
 
