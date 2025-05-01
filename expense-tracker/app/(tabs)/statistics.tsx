@@ -9,7 +9,7 @@ import {BarChart} from "react-native-gifted-charts"
 import Typo from "@/components/Typo";
 import Loading from "@/components/Loading";
 import { useAuth } from "@/contexts/authContext";
-import { fetchWeeklyStats } from "@/services/transactionService";
+import { fetchMonthlyStats, fetchWeeklyStats } from "@/services/transactionService";
 import TransactionList from "@/components/TransactionList";
 
 
@@ -105,7 +105,15 @@ const Staitistics = () => {
   };
 
   const getMonthlyStats = async ()=>{
-
+    setChartLoading(true);
+    let res = await fetchMonthlyStats(user?.uid as string);
+    setChartLoading(false);
+    if(res.success) {
+      setChartData(res?.data?.stats);
+      setTransactions(res?.data?.transactions);
+    } else{
+      Alert.alert("Error", res.msg)
+    }
   };
 
   const getYearlyStats = async ()=>{

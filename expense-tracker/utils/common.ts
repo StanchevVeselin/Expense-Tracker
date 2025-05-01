@@ -15,3 +15,40 @@ export const getLast7Days = () => {
     return result.reverse();
     // return an array of all the previcious 7 days
 }
+
+export const getLast12Months = () => {
+    const monthsOfYear = [
+        "Jan", 
+        "Feb", 
+        "Mar", 
+        "Apr", 
+        "May", 
+        "Jun", 
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Deb",
+    ];
+
+    const result = [];
+    
+    for (let i = 11; i >= 0; i--) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        
+        const monthName = monthsOfYear[date.getMonth()];
+        const shortYear = date.getFullYear().toString().slice(-2);
+        const formattedMonthYear = `${monthName} ${shortYear}`;
+        const formatedDate = date.toISOString().split("T")[0];
+
+        result.push({
+            month: formattedMonthYear,
+            fullDate: formatedDate,
+            income: 0,
+            expense: 0,
+        })
+    }
+    return result.reverse();
+}

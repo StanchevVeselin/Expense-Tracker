@@ -3,7 +3,7 @@ import { ResponseType, TransactionType, WalletType } from "@/types"
 import { collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, setDoc, Timestamp, updateDoc, where } from "firebase/firestore";
 import { uploadFileToCloudinary } from "./imageServise";
 import { createORUpdateWallet } from "./walletSerice";
-import { getLast7Days } from "@/utils/common";
+import { getLast12Months, getLast7Days } from "@/utils/common";
 import { scale } from "@/utils/styling";
 import { colors } from "@/constants/theme";
 
@@ -270,6 +270,70 @@ export const fetchWeeklyStats = async (
     } catch (error: any) {
         console.log("Transaction Service: Error updating wallet for the new transaction", error);
         return { success: false, msg: error.message };
+    }
+}
+
+export const fetchMonthlyStats = async (
+    uId: string,
+): Promise<ResponseType> => {
+    try {
+        const db = firestore;
+        const today = new Date();
+        const twelveMonthsAgo = new Date(today);
+        twelveMonthsAgo.setMonth(today.getMonth() - 12);
+        const transactionQuery = query(
+            collection(db, "transactions"),
+            where("date", ">=", Timestamp.fromDate(twelveMonthsAgo)),
+            where("date", "<=", Timestamp.fromDate(today)),
+            orderBy("date", "desc"),
+            where("uid", "==", uId)
+        );
+        const querySnapshot = await getDocs(transactionQuery)
+        const monthlyData = getLast12Months();
+        const transactions: TransactionType[] = [];
+
+        //    mapping each transactions in day
+        querySnapshot.forEach((doc) => {
+            const transaction = doc.data() as TransactionType;
+            transaction.id = doc.id;
+            transactions.push(transaction);
+            const transactionDate = (transaction.date as Timestamp).toDate();
+
+            const monthName = transactionDate.toLocaleString("default", {
+                month: "short"
+            });
+            const shortYear = transactionDate.getFullYear().toString().slice(-2);
+            const monthData = monthlyData.find((month) => month.month === `${monthName} ${shortYear}`)
+
+            if (monthData) {
+                if (transaction.type === "income") {
+                    monthData.income += transaction.amount;
+                } else if (transaction.type == "expense") {
+                    monthData.expense += transaction.amount;
+                }
+            }
+        })
+        // takes each days and creates two entries in array
+        const stats = monthlyData.flatMap((month) => [
+            {
+                value: month.income,
+                label: month.month,
+                spacing: scale(4),
+                labelWidth: scale(46),
+                frontColor: colors.primary
+            },
+            { value: month.expense, frontColor: colors.rose },
+        ])
+        return { 
+            success: true,
+            data: {
+                stats,
+                transactions
+            }
+        };
+    } catch (error) {
+        console.log("Error fetching monthly transaction", error);
+        return { success: false, msg: "Failed to fetch monthly transactions" };
     }
 }
 
