@@ -23,7 +23,7 @@ const Home = () => {
  const shouldFetch = !!user?.uid;
  const constraints = shouldFetch
  ? [
-     where("uid", "==", user.uid),
+     where("uid", "==", user?.uid),
      orderBy("date", "desc"),
      limit(30),
    ]
@@ -42,7 +42,7 @@ const Home = () => {
               <Typo size={16} color={colors.neutral400}>Helllo</Typo>
               <Typo size={20} fontWeight={"500"} color={colors.neutral400}>{user?.name}</Typo>
           </View>
-          <TouchableOpacity style={styles.searchIcon}>
+          <TouchableOpacity onPress={()=> router.push("/(modals)/searchModal")} style={styles.searchIcon}>
             <Icons.MagnifyingGlass 
               size={verticalScale(22)}
               color={colors.neutral200}
