@@ -8,6 +8,7 @@ A simple and easy-to-use Expense and Income Tracker app built with React Native,
 - **Add income:** Users can add their income sources, including salary, side income, etc.
 - **Expense and Income tracking:** View a list of all expenses and incomes added.
 - **Expense and Income summary:** View financial statistics and reports on weekly, monthly, and yearly bases.
+- **Graphical Statistics:** The app provides visual charts to help track and compare expenses and income over time.
 - **Authentication:** Firebase authentication for user accounts.
 - **Cloud storage:** Firebase is used for storing user data and syncing across devices.
 - **Responsive UI:** Designed to work well on both Android and iOS devices.
