@@ -21,6 +21,7 @@ A simple and easy-to-use Expense and Income Tracker app built with React Native,
   - React Navigation
   - React Native Paper
   - Firebase (for authentication and data storage)
+  - React Native Gifted Charts (for rendering graphical statistics)
   
 - **Backend:**
   - Firebase Firestore (for cloud storage)
