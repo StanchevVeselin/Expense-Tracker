@@ -57,7 +57,9 @@ For building the app for production, use the Expo build commands:
 
 expo build:android
 expo build:ios
+
 Usage
+
 -Login or Register: Users can sign in using Firebase Authentication with email/password.
 
 -Add an Expense: Enter the amount, category, and date of the expense.
