@@ -32,6 +32,7 @@ Follow these steps to get the project up and running locally.
 ### 1. Clone the repository
 
 git clone https://github.com/StanchevVeselin/Expense-Tracker.git
+
 2. Install dependencies
 Navigate to the project directory and install the necessary packages:
 
