@@ -37,6 +37,7 @@ Navigate to the project directory and install the necessary packages:
 
 cd expense-tracker
 npm install
+
 3. Set up Firebase
 Create a Firebase project at Firebase Console.
 
